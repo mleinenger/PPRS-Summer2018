@@ -1,0 +1,486 @@
+---
+title: "PPRS"
+author: "Mallorie Leinenger"
+date: "7/16/2018"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = "~/Documents/PPRS")
+```
+
+# Phonological and Predictive Reading Strategies 
+
+## Overview
+These data come from an eye tracking experiment investigating phonological coding and predictability effects during silent reading. To measure the use of phonological coding, participants read 180 neutral sentences that contained a contextually appropriate (but not predictable) target word. We used the gaze-contingent boundary paradigm (Rayner, 1975) to manipulate the preview information that readers had prior to directly fixating the target word. Readers either had an *identical* preview of the target (*beach*-*beach*), a *phonologically related* preview (*beech*-*beach*), or a control preview that shared the same number of letters with the correct target as the phonologically related preview, but did not fully overlap on phonology (*bench*-*beach*). We recorded readers eye movements as they read the sentences and compared reading time on the target word as a function of the type of preview to investigate the use of phonological codes. Following Leinenger (2018), individual participant survival analyses were computed on the first fixation duration data for the phonologically related and control conditions to determine the divergence point estimate for each participant. This estimate was taken to represent the earliest observable influence of phonology on the eye movement record and therefore as an index of how early participants were generating and using phonological codes, relative to one another.
+
+We also included 62 sentences with a manipulation of contextual constraint to investigate reliance on predictive strategies. Participants read sentences which either rendered a target word highly predictable or not predictable, and we compared reading time as a function of the constraint condition. Larger differences between the predictable and unpredictable conditions (whereby the predictable targets were read faster than the unpredictable) were taken as reflecting a greater reliance on context for generating predictions about upcoming words. Example stimuli appear below:
+
+- She moved from the country to the large **city** to find a better job. (Cloze = .9, predictable)
+- We took a walk in the quiet **city** before we drove back home. (Cloze = 0, unpredictable)
+
+Ultimately, participants scores on a battery of offline language assessments (verbal fluency, ) were related to their use of phonological coding and predictive strategies, to determine what specific language skills (or language skill profiles) were associated with different online reading strategies.
+
+```{r load packages, echo = FALSE, message=FALSE, warning=FALSE}
+## load required packages
+library(tidyverse)
+library(lme4)
+library(psych)
+library(plotrix)
+library(reshape2)
+library(RTsurvival)
+library(survival)
+```
+
+## Examining the use of Phonological Codes
+
+```{r read phonological data, echo = TRUE, message = FALSE, warning = FALSE}
+# read in the data
+d <- read.csv("PPRS_phon.csv")
+
+# create new "Preview" variable and recode variables into factors
+d$Preview <- as.factor(ifelse(d$cond==1,"Identical", ifelse(d$cond==2, "Phonologically Related", "Control")))
+d$previewtype<-as.factor(ifelse(d$cond == 1, 2, ifelse(d$cond == 2, 1, 3)))
+d$skp<-ifelse(d$skp==100,0,1)
+d$subj<-as.factor(d$subj)
+d$cond<-as.factor(d$cond)
+d$item<-as.factor(d$item)
+d$seq<-as.factor(d$seq)
+
+# ffd = first fixation duration, sfd = single fixation duration, gzd = gazd duration, gpt = go-past time, tvt = total time, skp = skipping probability, rgo = regression out probability, rgi = regression in probability
+str(d)
+head(d)
+
+# compute basic summary statistics
+byCond <- group_by(d, Preview)
+stats.m<-summarize_if(byCond,is.numeric,funs(mean), na.rm=TRUE)
+stats.se<-summarize_if(byCond,is.numeric,funs(std.error), na.rm=TRUE)
+stats.m
+stats.se
+
+# create a figure that plots duration measures
+
+d$Preview<- factor(d$Preview,levels(d$Preview)[c(2,3,1)])
+dat.SCA<-melt(data=d, id = c("subj","item","Preview"), measure = c("ffd","sfd","gzd","gpt","tvt"))
+p.meanse.SCA<-ggplot(data = subset(dat.SCA, variable %in% c("ffd","sfd","gzd","gpt","tvt")), aes(y = value, x= Preview, shape=Preview, color=Preview)) + 
+  stat_summary(fun.data = "mean_se") + stat_summary(fun.y = mean, geom = "point") + facet_grid(.~variable) +
+  labs(y = "Reading Time (ms)", x = "", shape="Preview Condition", color="Preview Condition") + theme_grey(base_size=16) + scale_y_continuous(breaks=seq(0,500,20)) + 
+  theme(axis.text.x = element_text(colour="grey4", size=0), axis.text.y = element_text(colour = "grey4", size=20))
+p.meanse.SCA + scale_colour_manual(values=c("aquamarine4","aquamarine3","coral3")) + scale_shape_manual(values=c(1,0,2)) 
+
+# create a figure that plots probability measures
+
+dat.SCA<-melt(data=d, id = c("subj","item","Preview"), measure = c("skp","rgo","rgi"))
+p.meanse.SCA<-ggplot(data = subset(dat.SCA, variable %in% c("skp","rgo","rgi")), aes(y = value, x= Preview, shape=Preview, color=Preview)) + 
+  stat_summary(fun.data = "mean_se") + stat_summary(fun.y = mean, geom = "point") + facet_grid(.~variable) +
+  labs(y = "Probability (%)", x = "", shape="Preview Condition", color="Preview Condition") + theme_grey(base_size=16) + scale_y_continuous(breaks=seq(0,1,.02)) + 
+  theme(axis.text.x = element_text(colour="grey4", size=0), axis.text.y = element_text(colour = "grey4", size=20))
+p.meanse.SCA + scale_colour_manual(values=c("aquamarine4","aquamarine3","coral3")) + scale_shape_manual(values=c(1,0,2)) 
+```
+
+## Running linear mixed effect regression models to determine significant mean differences
+For each model, the phonologically related condition is represented by the intercept and treatment coded contrasts test for significant differences between the phonologically
+
+```{r models for phonological data, echo = TRUE, message = FALSE, warning = FALSE}
+# first fixation duration
+
+#lm.ffd<-lmer(ffd ~ previewtype + (previewtype|subj) + (previewtype|item), data=d, control=lmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 100000))) failed to converge
+
+#lm.ffd<-lmer(ffd ~ previewtype + (1|subj) + (0 + previewtype|subj) + (previewtype|item), data=d, control=lmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 100000))) failed to converge
+
+#lm.ffd<-lmer(ffd ~ previewtype + (1|subj) + (0 + previewtype|subj) + (1|item) + (0 + previewtype|item), data=d, control=lmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 100000))) failed to converge
+
+lm.ffd<-lmer(ffd ~ previewtype + (previewtype|subj) + (1|item), data=d, control=lmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 100000)))
+summary(lm.ffd)
+
+# single fixation duration
+
+lm.sfd<-lmer(sfd ~ previewtype + (previewtype|subj) + (previewtype|item), data=d, control=lmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 100000)))
+summary(lm.sfd)
+
+# gaze duration
+
+#lm.gzd<-lmer(gzd ~ previewtype + (previewtype|subj) + (previewtype|item), data=d, control=lmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 100000))) failed to converge
+
+#lm.gzd<-lmer(gzd ~ previewtype + (1|subj) + (0 + previewtype|subj) + (previewtype|item), data=d, control=lmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 100000))) failed to converge
+
+#lm.gzd<-lmer(gzd ~ previewtype + (1|subj) + (0 + previewtype|subj) + (1|item) + (0 + previewtype|item), data=d, control=lmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 100000))) failed to converge
+
+lm.gzd<-lmer(gzd ~ previewtype + (previewtype|subj) + (1|item), data=d, control=lmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 100000)))
+summary(lm.gzd)
+
+# go-past time
+
+lm.gpt<-lmer(gpt ~ previewtype + (previewtype|subj) + (previewtype|item), data=d, control=lmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 100000)))
+summary(lm.gpt)
+
+# total time
+
+#lm.tvt<-lmer(tvt ~ previewtype + (previewtype|subj) + (previewtype|item), data=d, control=lmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 100000))) failed to converge
+
+#lm.tvt<-lmer(tvt ~ previewtype + (1|subj) + (0 + previewtype|subj) + (previewtype|item), data=d, control=lmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 100000))) failed to converge
+
+#lm.tvt<-lmer(tvt ~ previewtype + (1|subj) + (0 + previewtype|subj) + (1|item) + (0 + previewtype|item), data=d, control=lmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 100000))) failed to converge
+
+lm.tvt<-lmer(tvt ~ previewtype + (previewtype|subj) + (1|item), data=d, control=lmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 100000)))
+summary(lm.tvt)
+
+# skipping
+
+glm.skp <- glmer(skp ~ previewtype + (previewtype|subj) + (previewtype|item), data=d, family = binomial, control=glmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 100000)))
+summary(glm.skp)
+
+# regression-out
+
+glm.rgo <- glmer(rgo ~ previewtype + (previewtype|subj) + (previewtype|item), data=d, family = binomial, control=glmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 100000)))
+summary(glm.rgo)
+
+# regression-in
+
+#glm.rgi <- glmer(rgi ~ previewtype + (previewtype|subj) + (previewtype|item), data=d, family = binomial, control=glmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 100000))) failed to converge
+
+glm.rgi <- glmer(rgi ~ previewtype + (1|subj) + (0 + previewtype|subj) + (previewtype|item), data=d, family = binomial, control=glmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 100000)))
+summary(glm.rgi)
+```
+
+## Computing Divergence Point Estimates using IP-DPA Survival Analysis Technique (Reingold & Sheridan, 2014)
+
+```{r survdata setup, echo = TRUE, message=FALSE, warning=FALSE}
+tmp<-select(d,subj,ffd,cond) %>% arrange(cond) %>%
+  rename(duration=ffd) %>% rename(subject=subj) %>% rename(condition=cond)
+tmp$condition <- as.numeric(tmp$condition)
+survdata<- as.data.frame(tmp %>% as_tibble() %>% mutate(condition = condition-1)) %>%
+  filter(condition != 0, !is.na(duration))
+survdata$condition<- as.factor(survdata$condition)
+str(survdata)
+```
+We have 31 participants who each have between 36 and 105 data points:
+
+```{r survdata summary Exp 1, echo = TRUE, message=FALSE, warning=FALSE} 
+n.per.sbj <- table(survdata$subject)
+length(n.per.sbj)
+range(n.per.sbj)
+```
+We can now use these data to generate divergence point estimates (DPE) for each participant:
+
+```{r ip.DPA Exp 1, echo = TRUE, message=FALSE, warning=FALSE}
+ip.dpa <- DPA.ip(survdata$subject, survdata$duration, survdata$condition, quiet = TRUE)
+dpe <- as.data.frame(ip.dpa$dp_matrix)
+# critical columns in output
+# 'dpcount' = the number of iterations (out of 1000) on which a DPE was obtained
+#' median_dp_duration' = median of the DPEs obtained on each iteration
+str(dpe)
+dpe$subject[dpe$dpcount<500]
+```
+Doing so reveals that the DPE for 6 participants were unreliable (i.e., a DP was found on fewer than half of the iterations). Removing those participants reveals a mean DPE of ~192 across the remaining participants (the value moves around ever so slightly each time the bootstrap re-sampling procedure runs). This tells us that on average, phonological coding was influencing behavior by as early as 192 ms after fixation on the target word began.
+
+```{r DPE estimate Exp 1, echo = TRUE, message=FALSE, warning=FALSE}
+dpe.rel <- filter(dpe, dpcount >= 500)
+summarize(dpe.rel, mean.dpe = mean(median_duration, na.rm=TRUE))
+
+DP<-mean(dpe.rel$median_duration)
+ci.lower<-mean(dpe.rel$ci.lower)
+ci.upper<-mean(dpe.rel$ci.upper)
+```
+Finally, we can represent this visually by examining the survival curves created using the ggsurv function.
+
+```{r ggsurv function, echo = FALSE, message=FALSE, warning=FALSE}
+ggsurv <- function(s, CI = 'def', plot.cens = T, surv.col = c("coral3","aquamarine3"),
+                   cens.col = 'red', lty.est = c(2,1), lty.ci = 2,
+                   cens.shape = 3, back.white = F, xlab = 'Time',
+                   ylab = 'Survival', main = ''){
+  
+  library(ggplot2)
+  strata <- ifelse(is.null(s$strata) ==T, 1, length(s$strata))
+  stopifnot(length(surv.col) == 1 | length(surv.col) == strata)
+  stopifnot(length(lty.est) == 1 | length(lty.est) == strata)
+  
+  ggsurv.s <- function(s, CI = 'def', plot.cens = T, surv.col = c("aquamarine4","aquamarine3","coral3"),
+                       cens.col = 'red', lty.est = 1, lty.ci = 2,
+                       cens.shape = 3, back.white = F, xlab = 'Time',
+                       ylab = 'Survival', main = ''){
+    
+    dat <- data.frame(time = c(0, s$time),
+                      surv = c(1, s$surv),
+                      up = c(1, s$upper),
+                      low = c(1, s$lower),
+                      cens = c(0, s$n.censor))
+    dat.cens <- subset(dat, cens != 0)
+    
+    col <- ifelse(surv.col == 'gg.def', 'black', surv.col)
+    
+    pl <- ggplot(dat, aes(x = time, y = surv)) +
+      xlab(xlab) + ylab(ylab) + ggtitle(main) +
+      geom_step(col = col, lty = lty.est)
+    
+    pl <- if(CI == T | CI == 'def') {
+      pl + geom_step(aes(y = up), color = col, lty = lty.ci) +
+        geom_step(aes(y = low), color = col, lty = lty.ci)
+    } else (pl)
+    
+    pl <- if(plot.cens == T & length(dat.cens) > 0){
+      pl + geom_point(data = dat.cens, aes(y = surv), shape = cens.shape,
+                      col = cens.col)
+    } else if (plot.cens == T & length(dat.cens) == 0){
+      stop ('There are no censored observations')
+    } else(pl)
+    
+    pl <- if(back.white == T) {pl + theme_bw()
+    } else (pl)
+    pl
+  }
+  
+  ggsurv.m <- function(s, CI = 'def', plot.cens = T, surv.col = c("aquamarine4","aquamarine3","coral3"),
+                       cens.col = 'red', lty.est = 1, lty.ci = 2,
+                       cens.shape = 3, back.white = F, xlab = 'Time',
+                       ylab = 'Survival', main = '') {
+    n <- s$strata
+    
+    groups <- factor(unlist(strsplit(names
+                                     (s$strata), '='))[seq(2, 2*strata, by = 2)])
+    gr.name <-  unlist(strsplit(names(s$strata), '='))[1]
+    gr.df <- vector('list', strata)
+    ind <- vector('list', strata)
+    n.ind <- c(0,n); n.ind <- cumsum(n.ind)
+    for(i in 1:strata) ind[[i]] <- (n.ind[i]+1):n.ind[i+1]
+    
+    for(i in 1:strata){
+      gr.df[[i]] <- data.frame(
+        time = c(0, s$time[ ind[[i]] ]),
+        surv = c(1, s$surv[ ind[[i]] ]),
+        up = c(1, s$upper[ ind[[i]] ]),
+        low = c(1, s$lower[ ind[[i]] ]),
+        cens = c(0, s$n.censor[ ind[[i]] ]),
+        group = rep(groups[i], n[i] + 1))
+    }
+    
+    dat <- do.call(rbind, gr.df)
+    dat.cens <- subset(dat, cens != 0)
+    
+    pl <- ggplot(dat, aes(x = time, y = surv, group = group)) +
+      xlab(xlab) + ylab(ylab) + ggtitle(main) +
+      geom_step(aes(col = group, lty = group))
+    
+    col <- if(length(surv.col == 1)){
+      scale_colour_manual(name = gr.name, values = rep(surv.col, strata))
+    } else{
+      scale_colour_manual(name = gr.name, values = surv.col)
+    }
+    
+    pl <- if(surv.col[1] != 'gg.def'){
+      pl + col
+    } else {pl + scale_colour_discrete(name = gr.name)}
+    
+    line <- if(length(lty.est) == 1){
+      scale_linetype_manual(name = gr.name, values = rep(lty.est, strata))
+    } else {scale_linetype_manual(name = gr.name, values = lty.est)}
+    
+    pl <- pl + line
+    
+    pl <- if(CI == T) {
+      if(length(surv.col) > 1 && length(lty.est) > 1){
+        stop('Either surv.col or lty.est should be of length 1 in order
+             to plot 95% CI with multiple strata')
+      }else if((length(surv.col) > 1 | surv.col == c("aquamarine4","aquamarine3","coral3"))[1]){
+        pl + geom_step(aes(y = up, color = group), lty = lty.ci) +
+          geom_step(aes(y = low, color = group), lty = lty.ci)
+      } else{pl +  geom_step(aes(y = up, lty = group), col = surv.col) +
+          geom_step(aes(y = low,lty = group), col = surv.col)}
+    } else {pl}
+    
+    
+    pl <- if(plot.cens == T & length(dat.cens) > 0){
+      pl + geom_point(data = dat.cens, aes(y = surv), shape = cens.shape,
+                      col = cens.col)
+    } else if (plot.cens == T & length(dat.cens) == 0){
+      stop ('There are no censored observations')
+    } else(pl)
+    
+    pl <- if(back.white == T) {pl + theme_bw()
+    } else (pl)
+    pl
+  }
+  pl <- if(strata == 1) {ggsurv.s(s, CI , plot.cens, surv.col ,
+                                  cens.col, lty.est, lty.ci,
+                                  cens.shape, back.white, xlab,
+                                  ylab, main)
+  } else {ggsurv.m(s, CI, plot.cens, surv.col ,
+                   cens.col, lty.est, lty.ci,
+                   cens.shape, back.white, xlab,
+                   ylab, main)}
+  pl
+}
+
+```
+```{r survival figure Exp 1, echo = TRUE, message=FALSE, warning=FALSE}
+d$survdat<-as.integer(ifelse(d$Preview=="Identical",NA,d$ffd))
+tmp2 <- filter(d, !subj %in% c(1, 15, 16, 17, 19, 31))
+ffd.surv <- survfit(Surv(survdat) ~ Preview, data=tmp2)
+pl2<-ggsurv(s=ffd.surv)
+
+#my.label1 = bquote("Divergence Point " ~ .(format(DP, digits=3)) ~ "ms")
+#my.label2 = bquote("95% CI: " ~ .(format(ci.lower, digits=3)) ~ "-" ~ .(format(ci.upper, digits=3)) ~ "ms")
+  
+pl2 + geom_vline(xintercept = DP, linetype = "dotted") + 
+  annotate("rect", xmin=ci.lower, xmax=ci.upper, ymin=0, ymax=1, alpha = .2) + 
+  theme(axis.text.x = element_text(colour="grey4", size=16), axis.text.y = element_text(colour = "grey4", size=16)) + 
+  labs(y = "Survival", x = "Time") + theme_grey(base_size=16)
+```
+
+## Examining the use of Context and Predictive Strategies
+
+```{r read predictability data, echo = TRUE, message = FALSE, warning = FALSE}
+# read in the data
+d <- read.csv("PPRS_pred.csv")
+
+# create new "Constraint" variable and recode variables into factors
+d$Constraint <- as.factor(ifelse(d$cond==4,"High", "Low"))
+d$skp<-ifelse(d$skp==100,0,1)
+d$subj<-as.factor(d$subj)
+d$cond<-as.factor(d$cond)
+d$item<-as.factor(d$item)
+d$seq<-as.factor(d$seq)
+
+str(d)
+head(d)
+
+# compute basic summary statistics
+byCond <- group_by(d, Constraint)
+stats.m<-summarize_if(byCond,is.numeric,funs(mean), na.rm=TRUE)
+stats.se<-summarize_if(byCond,is.numeric,funs(std.error), na.rm=TRUE)
+stats.m
+stats.se
+
+# create a figure that plots duration measures
+
+dat.SCA<-melt(data=d, id = c("subj","item","Constraint"), measure = c("ffd","sfd","gzd","gpt","tvt"))
+p.meanse.SCA<-ggplot(data = subset(dat.SCA, variable %in% c("ffd","sfd","gzd","gpt","tvt")), aes(y = value, x= Constraint, shape=Constraint, color=Constraint)) + 
+  stat_summary(fun.data = "mean_se") + stat_summary(fun.y = mean, geom = "point") + facet_grid(.~variable) +
+  labs(y = "Reading Time (ms)", x = "", shape="Constraint", color="Constraint") + theme_grey(base_size=16) + scale_y_continuous(breaks=seq(0,500,20)) + 
+  theme(axis.text.x = element_text(colour="grey4", size=0), axis.text.y = element_text(colour = "grey4", size=20))
+p.meanse.SCA + scale_colour_manual(values=c("dodgerblue1","grey0")) + scale_shape_manual(values=c(1,0)) 
+
+# create a figure that plots probability measures
+
+dat.SCA<-melt(data=d, id = c("subj","item","Constraint"), measure = c("skp", "rgo", "rgi"))
+p.meanse.SCA<-ggplot(data = subset(dat.SCA, variable %in% c("skp", "rgo", "rgi")), aes(y = value, x= Constraint, shape=Constraint, color=Constraint)) + 
+  stat_summary(fun.data = "mean_se") + stat_summary(fun.y = mean, geom = "point") + facet_grid(.~variable) +
+  labs(y = "Reading Time (ms)", x = "", shape="Constraint", color="Constraint") + theme_grey(base_size=16) + scale_y_continuous(breaks=seq(0,1,.02)) + 
+  theme(axis.text.x = element_text(colour="grey4", size=0), axis.text.y = element_text(colour = "grey4", size=20))
+p.meanse.SCA + scale_colour_manual(values=c("dodgerblue1","grey0")) + scale_shape_manual(values=c(1,0)) 
+```
+
+## Running linear mixed effect regression models to determine significant mean differences
+
+```{r models for predictability data, echo = TRUE, message = FALSE, warning = FALSE}
+
+# setting up contrasts (deviation coding)
+
+contrasts(d$Constraint) <- rbind(-.5,.5)
+
+# first fixation duration
+
+lm.ffd<-lmer(ffd ~ Constraint + (Constraint|subj) + (Constraint|item), data=d, control=lmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 100000)))
+summary(lm.ffd)
+
+# single fixation duration
+
+lm.sfd<-lmer(sfd ~ Constraint + (Constraint|subj) + (Constraint|item), data=d, control=lmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 100000)))
+summary(lm.sfd)
+
+# gaze duration
+
+lm.gzd<-lmer(gzd ~ Constraint + (Constraint|subj) + (Constraint|item), data=d, control=lmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 100000)))
+summary(lm.gzd)
+
+# go-past time
+
+lm.gpt<-lmer(gpt ~ Constraint + (Constraint|subj) + (Constraint|item), data=d, control=lmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 100000)))
+summary(lm.gpt)
+
+# total time
+
+lm.tvt<-lmer(tvt ~ Constraint + (Constraint|subj) + (Constraint|item), data=d, control=lmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 100000)))
+summary(lm.tvt)
+
+# skipping
+
+glm.skp <- glmer(skp ~ Constraint + (Constraint|subj) + (Constraint|item), data=d, family = binomial, control=glmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 100000)))
+summary(glm.skp)
+
+# regression-out
+
+glm.rgo <- glmer(rgo ~ Constraint + (Constraint|subj) + (Constraint|item), data=d, family = binomial, control=glmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 100000)))
+summary(glm.rgo)
+
+# regression-in
+
+glm.rgi <- glmer(rgi ~ Constraint + (Constraint|subj) + (Constraint|item), data=d, family = binomial, control=glmerControl(optimizer="bobyqa", optCtrl = list(maxfun = 100000)))
+summary(glm.rgi)
+```
+
+## Computing the effect of predictability for each participant using Survival Analyses
+
+```{r predictability effect, echo = TRUE, message = FALSE, warning = FALSE}
+tmp<-select(d,subj,ffd,cond) %>% arrange(cond) %>%
+  rename(duration=ffd) %>% rename(subject=subj) %>% rename(condition=cond)
+tmp$condition <- as.numeric(tmp$condition)
+survdata<- as.data.frame(tmp %>% as_tibble() %>% filter(!is.na(duration)))
+survdata$condition<- as.factor(survdata$condition)
+str(survdata)
+```
+We have 31 participants who each have between 24 and 62 data points:
+
+```{r survdata summary pred, echo = TRUE, message=FALSE, warning=FALSE} 
+n.per.sbj <- table(survdata$subject)
+length(n.per.sbj)
+range(n.per.sbj)
+```
+We can now use these data to generate divergence point estimates (DPE) for each participant:
+
+```{r ip.DPA pred, echo = TRUE, message=FALSE, warning=FALSE}
+ip.dpa <- DPA.ip(survdata$subject, survdata$duration, survdata$condition, quiet = TRUE)
+dpe <- as.data.frame(ip.dpa$dp_matrix)
+# critical columns in output
+# 'dpcount' = the number of iterations (out of 1000) on which a DPE was obtained
+#' median_dp_duration' = median of the DPEs obtained on each iteration
+str(dpe)
+dpe$subject[dpe$dpcount<500]
+```
+Doing so reveals that the DPE for 1 participant was unreliable (i.e., a DP was found on fewer than half of the iterations). Removing that participant reveals a mean DPE of ~151 across the remaining participants (the value moves around ever so slightly each time the bootstrap re-sampling procedure runs). This tells us that on average, the constraint manipulation was influencing behavior by as early as 151 ms after fixation on the target word began.
+
+```{r DPE estimate pred, echo = TRUE, message=FALSE, warning=FALSE}
+dpe.rel <- filter(dpe, dpcount >= 500)
+summarize(dpe.rel, mean.dpe = mean(median_duration, na.rm=TRUE))
+
+DP<-mean(dpe.rel$median_duration)
+ci.lower<-mean(dpe.rel$ci.lower)
+ci.upper<-mean(dpe.rel$ci.upper)
+```
+
+And we can plot the survival figure for the entire group of participants.
+```{r survival figure pred, echo = TRUE, message=FALSE, warning=FALSE}
+d$survdat<-as.integer(d$ffd)
+tmp2 <- filter(d, !subj %in% c(4))
+ffd.surv <- survfit(Surv(survdat) ~ Constraint, data=tmp2)
+pl2<-ggsurv(s=ffd.surv)
+
+#my.label1 = bquote("Divergence Point " ~ .(format(DP, digits=3)) ~ "ms")
+#my.label2 = bquote("95% CI: " ~ .(format(ci.lower, digits=3)) ~ "-" ~ .(format(ci.upper, digits=3)) ~ "ms")
+  
+pl2 + geom_vline(xintercept = DP, linetype = "dotted") + 
+  annotate("rect", xmin=ci.lower, xmax=ci.upper, ymin=0, ymax=1, alpha = .2) + 
+  theme(axis.text.x = element_text(colour="grey4", size=16), axis.text.y = element_text(colour = "grey4", size=16)) + 
+  labs(y = "Survival", x = "Time") + theme_grey(base_size=16)
+```
+## Determining hte size of the predictability effect for each participant.
+
+We can compute each participant's mean gzd for the high and low constraint items and then subtract their gzd in the high constraint condition from their gzd in the low constraint condition to determine the size of each individual participant's predictability effect.
+```{r size pred effect, echo = TRUE, message=FALSE, warning=FALSE}
+
+tmp <- setNames(aggregate(d$gzd, by=list(d$subj,d$cond), FUN=mean, na.rm=TRUE), c("subject","condition","gzd"))
+pred <- setNames(spread(tmp,condition,gzd), c("subject","HC","LC"))
+pred$diff <- pred$LC-pred$HC
+head(pred,31)
+```
