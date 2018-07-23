@@ -155,6 +155,7 @@ survdata<- as.data.frame(tmp %>% as_tibble() %>% mutate(condition = condition-1)
 survdata$condition<- as.factor(survdata$condition)
 str(survdata)
 ```
+
 We have 31 participants who each have between 36 and 105 data points:
 
 ```{r survdata summary Exp 1, echo = TRUE, message=FALSE, warning=FALSE} 
@@ -162,6 +163,7 @@ n.per.sbj <- table(survdata$subject)
 length(n.per.sbj)
 range(n.per.sbj)
 ```
+
 We can now use these data to generate divergence point estimates (DPE) for each participant:
 
 ```{r ip.DPA Exp 1, echo = TRUE, message=FALSE, warning=FALSE}
@@ -173,6 +175,7 @@ dpe <- as.data.frame(ip.dpa$dp_matrix)
 str(dpe)
 dpe$subject[dpe$dpcount<500]
 ```
+
 Doing so reveals that the DPE for 6 participants were unreliable (i.e., a DP was found on fewer than half of the iterations). Removing those participants reveals a mean DPE of ~192 across the remaining participants (the value moves around ever so slightly each time the bootstrap re-sampling procedure runs). This tells us that on average, phonological coding was influencing behavior by as early as 192 ms after fixation on the target word began.
 
 ```{r DPE estimate Exp 1, echo = TRUE, message=FALSE, warning=FALSE}
@@ -183,6 +186,7 @@ DP<-mean(dpe.rel$median_duration)
 ci.lower<-mean(dpe.rel$ci.lower)
 ci.upper<-mean(dpe.rel$ci.upper)
 ```
+
 Finally, we can represent this visually by examining the survival curves created using the ggsurv function.
 
 ```{r ggsurv function, echo = FALSE, message=FALSE, warning=FALSE}
@@ -313,7 +317,7 @@ ggsurv <- function(s, CI = 'def', plot.cens = T, surv.col = c("coral3","aquamari
 }
 
 ```
-```{r survival figure Exp 1, echo = TRUE, message=FALSE, warning=FALSE}
+```{r survival figure Exp 1, echo = FALSE, message=FALSE, warning=FALSE}
 d$survdat<-as.integer(ifelse(d$Preview=="Identical",NA,d$ffd))
 tmp2 <- filter(d, !subj %in% c(1, 15, 16, 17, 19, 31))
 ffd.surv <- survfit(Surv(survdat) ~ Preview, data=tmp2)
@@ -324,6 +328,8 @@ pl2<-ggsurv(s=ffd.surv)
   
 pl2 + geom_vline(xintercept = DP, linetype = "dotted") + 
   annotate("rect", xmin=ci.lower, xmax=ci.upper, ymin=0, ymax=1, alpha = .2) + 
+  annotate("text", x = 475, y = 0.75, label = "Mean Divergence Point = 192ms", size = 3.5) +
+  annotate("text", x = 475, y = 0.7, label = "Range: 95.5-319.5ms", size = 3.5) + 
   theme(axis.text.x = element_text(colour="grey4", size=16), axis.text.y = element_text(colour = "grey4", size=16)) + 
   labs(y = "Survival", x = "Time") + theme_grey(base_size=16)
 ```
@@ -430,6 +436,7 @@ survdata<- as.data.frame(tmp %>% as_tibble() %>% filter(!is.na(duration)))
 survdata$condition<- as.factor(survdata$condition)
 str(survdata)
 ```
+
 We have 31 participants who each have between 24 and 62 data points:
 
 ```{r survdata summary pred, echo = TRUE, message=FALSE, warning=FALSE} 
@@ -437,6 +444,7 @@ n.per.sbj <- table(survdata$subject)
 length(n.per.sbj)
 range(n.per.sbj)
 ```
+
 We can now use these data to generate divergence point estimates (DPE) for each participant:
 
 ```{r ip.DPA pred, echo = TRUE, message=FALSE, warning=FALSE}
@@ -448,7 +456,8 @@ dpe <- as.data.frame(ip.dpa$dp_matrix)
 str(dpe)
 dpe$subject[dpe$dpcount<500]
 ```
-Doing so reveals that the DPE for 1 participant was unreliable (i.e., a DP was found on fewer than half of the iterations). Removing that participant reveals a mean DPE of ~151 across the remaining participants (the value moves around ever so slightly each time the bootstrap re-sampling procedure runs). This tells us that on average, the constraint manipulation was influencing behavior by as early as 151 ms after fixation on the target word began.
+
+Doing so reveals that the DPE for 1 participant was unreliable (i.e., a DP was found on fewer than half of the iterations). Removing that participant reveals a mean DPE of ~151 ms across the remaining participants (the value moves around ever so slightly each time the bootstrap re-sampling procedure runs). This tells us that on average, the constraint manipulation was influencing behavior by as early as 151 ms after fixation on the target word began.
 
 ```{r DPE estimate pred, echo = TRUE, message=FALSE, warning=FALSE}
 dpe.rel <- filter(dpe, dpcount >= 500)
@@ -460,6 +469,7 @@ ci.upper<-mean(dpe.rel$ci.upper)
 ```
 
 And we can plot the survival figure for the entire group of participants.
+
 ```{r survival figure pred, echo = TRUE, message=FALSE, warning=FALSE}
 d$survdat<-as.integer(d$ffd)
 tmp2 <- filter(d, !subj %in% c(4))
@@ -471,16 +481,279 @@ pl2<-ggsurv(s=ffd.surv)
   
 pl2 + geom_vline(xintercept = DP, linetype = "dotted") + 
   annotate("rect", xmin=ci.lower, xmax=ci.upper, ymin=0, ymax=1, alpha = .2) + 
+  annotate("text", x = 475, y = 0.75, label = "Mean Divergence Point = 151ms", size = 3.5) +
+  annotate("text", x = 475, y = 0.7, label = "Range: 76-264.5ms", size = 3.5) + 
   theme(axis.text.x = element_text(colour="grey4", size=16), axis.text.y = element_text(colour = "grey4", size=16)) + 
   labs(y = "Survival", x = "Time") + theme_grey(base_size=16)
 ```
-## Determining hte size of the predictability effect for each participant.
+
+## Determining the size of the predictability effect for each participant.
 
 We can compute each participant's mean gzd for the high and low constraint items and then subtract their gzd in the high constraint condition from their gzd in the low constraint condition to determine the size of each individual participant's predictability effect.
+
 ```{r size pred effect, echo = TRUE, message=FALSE, warning=FALSE}
 
 tmp <- setNames(aggregate(d$gzd, by=list(d$subj,d$cond), FUN=mean, na.rm=TRUE), c("subject","condition","gzd"))
 pred <- setNames(spread(tmp,condition,gzd), c("subject","HC","LC"))
 pred$diff <- pred$LC-pred$HC
 head(pred,31)
+```
+
+## Cluster Analysis to determine different reader profiles
+
+Examining the relationship between reading strategies (e.g., the use of phonological coding to identify words or context to predict/constrain the possibilities for upcoming words) and underlying language skill profiles using cluster analysis
+
+We used Ward's Method, which is a hierarchical, agglomerative clustering procedure, and considered 5 clustering solutions (2- to 6-cluster solutions). The input consisted of z-transformed data for the following measures for the 25 participants without missing cases.  
+**Mean.GZD** - the mean gaze duration in the identical preview condition.  
+**DPE.Phon** - the individual participant's divergence point (calculated from the survival analysis above).  
+**Pred.effect.GZD** - the size of the predictability effect (in ms) calculated by subtracting a participant's mean gaze duration in the high constraint condition from their mean gaze duration in the low constraint condition.  
+**Spelling** - participant's raw score on the Woodcock Johnson spelling assessment.  
+**T.PDE.WPS** - participant's score on the TOWRE Phonemic Decoding Efficiency subtest (converted into a words per second measure).  
+**T.SWE.WPS** - participant's score on the TOWRE Sight Word Efficiency subtest (converted into a words per second measure).  
+**Vocab** - participant's raw score on the WASI II Vocabulary test.
+
+*We did not include scores on the PIAT.R reading comprehension test when performing the cluster analysis due to reduced variability in scores. We also chose to use the size of the predictability effect in ms rather than the DPE for our measure of reliance on predictive strategies due to greater variability in scores.*
+
+```{r cluster analysis set up, echo = TRUE, message=FALSE, warning=FALSE}
+# 'clusterdata' is a data frame with one row per subject and one column
+# per measure (as numeric, z-transformed values) that you want the cluster analysis to take into account.
+# Remove all columns that you do not want the cluster analysis to use and any rows with missing data.
+
+t <- read.csv("PPRS_Assessment_EM.csv")
+cd <- data.frame(matrix(NA, nrow=31, ncol=0))
+cd$sub <- as.factor(t$ID)
+cd$Verbal.Fluency <- as.numeric(scale(t$Verbal.Fluency))
+cd$Spelling <- as.numeric(scale(t$Spelling))
+cd$T.SWE.WPS <- as.numeric(scale(t$T.SWE.WPS))
+cd$T.PDE.WPS <- as.numeric(scale(t$T.PDE.WPS))
+cd$PIAT <- as.numeric(scale(t$PIAT))
+cd$Vocab <- as.numeric(scale(t$Vocab))
+cd$DPE.Phon <- as.numeric(scale(t$DPE.Phon))
+cd$DPE.Pred <- as.numeric(scale(t$DPE.Pred))
+cd$Pred.effect.GZD <- as.numeric(scale(t$Pred.effect.GZD))
+cd$Mean.GZD <- as.numeric(scale(t$Mean.GZD))
+
+# use subject ID as a rowname to make sure that you can correctly match each sub to its cluster
+rownames(cd)<-cd$sub
+
+# remove participants with missing values and remove variables that are not of interest
+cd[!complete.cases(cd),]
+clusterdata<-cd[c(2:14,18,20:30),c(3:5,7:8,10:11)]
+sub <- c(2:14,18,20:30)
+```
+
+Doing so reveals the dendogram with the 2- and 3-cluster solutions outlined in blue and red respectively
+
+```{r cluster analysis dendogram, echo = TRUE, message=FALSE, warning=FALSE}
+# Ward Hierarchical Clustering
+d <- dist(clusterdata, method = "euclidean") # distance matrix
+fit <- hclust(d, method="ward.D2") # ward.D2 is actualy ward's method
+
+plot(fit) # display dendogram
+groups2 <- cutree(fit, k=2) # cut tree into 2 clusters
+groups3 <- cutree(fit, k=3) # cut tree into 3 clusters
+groups4 <- cutree(fit, k=4) # cut tree into 4 clusters
+groups5 <- cutree(fit, k=5) # cut tree into 5 clusters
+groups6 <- cutree(fit, k=6) # cut tree into 6 clusters
+# draw dendogram with borders around the k clusters 
+rect.hclust(fit, k=3, border="red")
+rect.hclust(fit, k=2, border="blue")
+```
+
+Next, we can use the clValid package to compare the different clustering methods and determine which cluster solution is best. When doing so, the aim is to minimize connectivity, maximize silhouette (max value 1), and maximize the Dunn index (max value infinity). 
+
+Doing so reveals that the hierarchical clustering method was the best (providing a better solution than kmeans or pam), but depending on the validation measure, either the 2, 3, or 4 cluster solution was best. Going forward, we investigate the 2- and 3-cluster solutions.
+
+```{r cluster analysis validation, echo = TRUE, message=FALSE, warning=FALSE}
+#######################################
+##  determing best cluster solution  ##
+#######################################
+
+library(clValid)
+
+clmethods <- c("hierarchical","kmeans","pam")
+v <- clValid(clusterdata, nClust = 2:6,
+             clMethods = clmethods, validation = "internal") #comparing methods and cluster solutions for k= 2-6 solutions
+
+# Connectivity should be minimized (minimum value 0), silhouette should be maximized (max value 1), Dunn index should be maximized (max value infinity)
+summary(v) #summary of best method (hierarchical, kmeans, pam) and number of clusters
+plot(v) # plots for internal validataion measures (connectivity, Dunn, Silhouette)
+```
+
+Here we can see the summary statistics for various reading time and language skill assessments for the different clusters in the 2- and 3-cluster solutions.
+
+```{r cluster summary stats, echo = TRUE, message=FALSE, warning=FALSE}
+#merge assessment data with cluster data grouping variables
+groups<-data.frame(groups2,groups3,sub)
+full<-merge(cd,groups,by="sub")
+full$groups2 <- as.factor(full$groups2)
+full$groups3 <- as.factor(full$groups3)
+
+stats2<-describeBy(full, full$groups2, skew=FALSE, ranges=FALSE)
+stats2
+
+stats3<-describeBy(full, full$groups3, skew=FALSE, ranges=FALSE)
+stats3
+```
+
+Next we can take a look at the associated figures and group comparisons, to see what type of reader profiles the cluster analysis revealed. First, we consider the 2-cluster solution.
+
+When breaking our participants into 2 clusters, the analysis reveals a generally higher-skilled (cluster 1) and generally-lower skilled (cluster 2) group of readers. Cluster 1 scored significantly higher on spelling and rapid non-word naming, and numerically higher on vocabulary and reading comprehension (differences between rapid word naming and mean gaze durations were very small). Cluster 1 also had a significantly earlier mean divergence point (they use sound information more rapidly during reading), but had a significantly smaller predictability effect (they seem to be less reliant on context to identify words). The first evidence that we might have identified a dissociation between phonological and predictive reading strategies (and evidence that relying on phonological processing might be indicative of generally more highly skilled readers).
+
+```{r 2 cluster solution, echo = FALSE, message=FALSE, warning=FALSE}
+# 2 Clusters Figures and significance tests
+ggplot(full, aes(x=groups2, y=Spelling, colour=groups2)) + geom_boxplot() + geom_point() +
+  labs(title = "Spelling", x = "", y = "WJ Spelling z-score", colour = "Clusters") + theme_grey(base_size=18) +
+  theme(axis.text.x = element_text(colour="white", size= 0), axis.text.y = element_text(colour = "grey4", size=16)) +
+  scale_color_manual(values=c("skyblue3","palegreen3"))
+
+test <- lm(data=full, Spelling ~ groups2)
+summary(test)
+
+ggplot(full, aes(x=groups2, y=Vocab, colour=groups2)) + geom_boxplot() + geom_point() +
+  labs(title = "Vocabulary", x = "", y = "WASI-II z-score", colour = "Clusters") + theme_grey(base_size=18) +
+  theme(axis.text.x = element_text(colour="white", size= 0), axis.text.y = element_text(colour = "grey4", size=16)) +
+  scale_color_manual(values=c("skyblue3","palegreen3"))
+
+test <- lm(data=full, Vocab ~ groups2)
+summary(test)
+  
+ggplot(full, aes(x=groups2, y=PIAT, colour=groups2)) + geom_boxplot() + geom_point() +
+  labs(title = "Reading Comprehension", x = "", y = "PIAT-R z-score", colour = "Clusters") + theme_grey(base_size=18) +
+  theme(axis.text.x = element_text(colour="white", size= 0), axis.text.y = element_text(colour = "grey4", size=16)) +
+  scale_color_manual(values=c("skyblue3","palegreen3"))
+
+test <- lm(data=full, PIAT ~ groups2)
+summary(test)
+
+ggplot(full, aes(x=groups2, y=T.PDE.WPS, colour=groups2)) + geom_boxplot() + geom_point() +
+  labs(title = "Rapid Non-Word Naming", x = "", y = "TOWRE PDE z-score", colour = "Clusters") + theme_grey(base_size=18) +
+  theme(axis.text.x = element_text(colour="white", size= 0), axis.text.y = element_text(colour = "grey4", size=16)) +
+  scale_color_manual(values=c("skyblue3","palegreen3"))
+
+test <- lm(data=full, T.PDE.WPS ~ groups2)
+summary(test)
+
+ggplot(full, aes(x=groups2, y=T.SWE.WPS, colour=groups2)) + geom_boxplot() + geom_point() +
+  labs(title = "Rapid Word Naming", x = "", y = "TOWRE SWE z-score", colour = "Clusters") + theme_grey(base_size=18) +
+  theme(axis.text.x = element_text(colour="white", size= 0), axis.text.y = element_text(colour = "grey4", size=16)) +
+  scale_color_manual(values=c("skyblue3","palegreen3"))
+
+test <- lm(data=full, T.SWE.WPS ~ groups2)
+summary(test)
+
+ggplot(full, aes(x=groups2, y=Mean.GZD, colour=groups2)) + geom_boxplot() + geom_point() +
+  labs(title = "Gaze Duration", x = "", y = "Gaze Duration (ms)", colour = "Clusters") + theme_grey(base_size=18) +
+  theme(axis.text.x = element_text(colour="white", size= 0), axis.text.y = element_text(colour = "grey4", size=16)) +
+  scale_color_manual(values=c("skyblue3","palegreen3"))
+
+test <- lm(data=full, Mean.GZD ~ groups2)
+summary(test)
+
+ggplot(full, aes(x=groups2, y=DPE.Phon, colour=groups2)) + geom_boxplot() + geom_point() +
+  labs(title = "Divergence Point (Phonological Processing)", x = "", y = "Divergence Point Estimate (ms)", colour = "Clusters") + theme_grey(base_size=18) +
+  theme(axis.text.x = element_text(colour="white", size= 0), axis.text.y = element_text(colour = "grey4", size=16)) +
+  scale_color_manual(values=c("skyblue3","palegreen3"))
+
+test <- lm(data=full, DPE.Phon ~ groups2)
+summary(test)
+
+ggplot(full, aes(x=groups2, y=Pred.effect.GZD, colour=groups2)) + geom_boxplot() + geom_point() +
+  labs(title = "Size of Predictability Effect", x = "", y = "Size of Predictability Effect (ms)", colour = "Clusters") + theme_grey(base_size=18) +
+  theme(axis.text.x = element_text(colour="white", size= 0), axis.text.y = element_text(colour = "grey4", size=16)) +
+  scale_color_manual(values=c("skyblue3","palegreen3"))
+
+test <- lm(data=full, Pred.effect.GZD ~ groups2)
+summary(test)
+```
+
+Finally, we consider the 3-cluster solution.
+
+When breaking our participants into 3 clusters, the analysis provides additional evidence in support of various reading strategies, particularly it identifies one group of readers (cluster 3) who show a large effect of predictability and a very late effect of phonology (i.e., they seem to rely heavily on prior context to identify words) and another group of readers (cluster 2) who shows the opposite pattern--early use of phonology (i.e., early divergence point estimates) but a very small effect of predictability. The third cluster (cluster 1) falls in the middle and seems to be using a mixture of these two strategies (or at least contains a mixture of participants who use each strategy).
+
+Compared to Cluster 2 (our readers who seem to rely more on phonological coding), Cluster 3 (our predictive strategy readers) had significantly later divergence point estimates and significantly larger effects of predictability. They also showed some interesting differences in underlying language skills: Although they did not differ from Cluster 2 on measures of vocabulary or reading comprehension, they had significantly lower scores on spelling and rapid non-word naming (though their scores on rapid word naming did not differ--suggesting that the difference is driven by poorer skills extracting phonology from written information, rather than slower processing speed). Finally, there was a tendency for readers relying on predictive strategies to have marginally slower mean gaze durations during reading, suggesting slightly slower word identification speeds.
+
+
+```{r 3 cluster solution, echo = FALSE, message=FALSE, warning=FALSE}
+# 3 Clusters Figures
+ggplot(full, aes(x=groups3, y=DPE.Phon, colour=groups3)) + geom_boxplot() + geom_point() +
+  labs(title = "Divergence Point (Phonological Processing)", x = "", y = "Divergence Point Estimate (ms)", colour = "Clusters") + theme_grey(base_size=18) +
+  theme(axis.text.x = element_text(colour="white", size= 0), axis.text.y = element_text(colour = "grey4", size=16)) +
+  scale_color_manual(values=c("orchid4","skyblue3","palegreen3"))
+
+test <- lm(data=full, DPE.Phon ~ groups3)
+summary(test)
+fu.test <- lm(data=subset(full,full$groups3 != 1), DPE.Phon ~ groups3)
+summary(fu.test)
+
+ggplot(full, aes(x=groups3, y=Pred.effect.GZD, colour=groups3)) + geom_boxplot() + geom_point() +
+  labs(title = "Size of Predictability Effect", x = "", y = "Size of Predictability Effect (ms)", colour = "Clusters") + theme_grey(base_size=18) +
+  theme(axis.text.x = element_text(colour="white", size= 0), axis.text.y = element_text(colour = "grey4", size=16)) +
+  scale_color_manual(values=c("orchid4","skyblue3","palegreen3"))
+
+test <- lm(data=full, Pred.effect.GZD ~ groups3)
+summary(test)
+fu.test <- lm(data=subset(full,full$groups3 != 1), Pred.effect.GZD ~ groups3)
+summary(fu.test)
+
+ggplot(full, aes(x=groups3, y=Vocab, colour=groups3)) + geom_boxplot() + geom_point() +
+  labs(title = "Vocabulary", x = "", y = "WASI-II z-score", colour = "Clusters") + theme_grey(base_size=18) +
+  theme(axis.text.x = element_text(colour="white", size= 0), axis.text.y = element_text(colour = "grey4", size=16)) +
+  scale_color_manual(values=c("orchid4","skyblue3","palegreen3"))
+
+test <- lm(data=full, Vocab ~ groups3)
+summary(test)
+fu.test <- lm(data=subset(full,full$groups3 != 1), Vocab ~ groups3)
+summary(fu.test)
+
+ggplot(full, aes(x=groups3, y=PIAT, colour=groups3)) + geom_boxplot() + geom_point() +
+  labs(title = "Reading Comprehension", x = "", y = "PIAT-R z-score", colour = "Clusters") + theme_grey(base_size=18) +
+  theme(axis.text.x = element_text(colour="white", size= 0), axis.text.y = element_text(colour = "grey4", size=16)) +
+  scale_color_manual(values=c("orchid4","skyblue3","palegreen3"))
+
+test <- lm(data=full, PIAT ~ groups3)
+summary(test)
+fu.test <- lm(data=subset(full,full$groups3 != 1), PIAT ~ groups3)
+summary(fu.test)
+  
+ggplot(full, aes(x=groups3, y=Spelling, colour=groups3)) + geom_boxplot() + geom_point() +
+  labs(title = "Spelling", x = "", y = "WJ Spelling z-score", colour = "Clusters") + theme_grey(base_size=18) +
+  theme(axis.text.x = element_text(colour="white", size= 0), axis.text.y = element_text(colour = "grey4", size=16)) +
+  scale_color_manual(values=c("orchid4","skyblue3","palegreen3"))
+
+test <- lm(data=full, Spelling ~ groups3)
+summary(test)
+fu.test <- lm(data=subset(full,full$groups3 != 1), Spelling ~ groups3)
+summary(fu.test)
+
+ggplot(full, aes(x=groups3, y=T.PDE.WPS, colour=groups3)) + geom_boxplot() + geom_point() +
+  labs(title = "Rapid Non-Word Naming", x = "", y = "TOWRE PDE z-score", colour = "Clusters") + theme_grey(base_size=18) +
+  theme(axis.text.x = element_text(colour="white", size= 0), axis.text.y = element_text(colour = "grey4", size=16)) +
+  scale_color_manual(values=c("orchid4","skyblue3","palegreen3"))
+
+test <- lm(data=full, T.PDE.WPS ~ groups3)
+summary(test)
+fu.test <- lm(data=subset(full,full$groups3 != 1), T.PDE.WPS ~ groups3)
+summary(fu.test)
+
+ggplot(full, aes(x=groups3, y=T.SWE.WPS, colour=groups3)) + geom_boxplot() + geom_point() +
+  labs(title = "Rapid Word Naming", x = "", y = "TOWRE SWE z-score", colour = "Clusters") + theme_grey(base_size=18) +
+  theme(axis.text.x = element_text(colour="white", size= 0), axis.text.y = element_text(colour = "grey4", size=16)) +
+  scale_color_manual(values=c("orchid4","skyblue3","palegreen3"))
+
+test <- lm(data=full, T.SWE.WPS ~ groups3)
+summary(test)
+fu.test <- lm(data=subset(full,full$groups3 != 1), T.SWE.WPS ~ groups3)
+summary(fu.test)
+
+ggplot(full, aes(x=groups3, y=Mean.GZD, colour=groups3)) + geom_boxplot() + geom_point() +
+  labs(title = "Gaze Duration", x = "", y = "Gaze Duration (ms)", colour = "Clusters") + theme_grey(base_size=18) +
+  theme(axis.text.x = element_text(colour="white", size= 0), axis.text.y = element_text(colour = "grey4", size=16)) +
+  scale_color_manual(values=c("orchid4","skyblue3","palegreen3"))
+
+test <- lm(data=full, Mean.GZD ~ groups3)
+summary(test)
+fu.test <- lm(data=subset(full,full$groups3 != 1), Mean.GZD ~ groups3)
+summary(fu.test)
+
 ```

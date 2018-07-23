@@ -529,17 +529,17 @@ str(dpe)
 
     ## 'data.frame':    31 obs. of  6 variables:
     ##  $ subject        : Factor w/ 31 levels "1","2","3","4",..: 1 2 3 4 5 6 7 8 9 10 ...
-    ##  $ dpcount        : num  18 1000 1000 1000 1000 612 1000 848 1000 974 ...
-    ##  $ median_dp_point: num  1097.5 91.5 1 492 105 ...
+    ##  $ dpcount        : num  26 1000 1000 1000 1000 589 1000 846 1000 978 ...
+    ##  $ median_dp_point: num  1096 91 1 491 104 ...
     ##  $ median_duration: num  312.5 145.5 95.5 228.5 145.5 ...
-    ##  $ ci.lower       : num  312.5 145.5 95.5 228.5 113.5 ...
-    ##  $ ci.upper       : num  313.4 150 95.5 250.5 283 ...
+    ##  $ ci.lower       : num  298.1 145.5 95.5 228.5 113.5 ...
+    ##  $ ci.upper       : num  312.5 150 95.5 250.5 283 ...
 
 ``` r
 dpe$subject[dpe$dpcount<500]
 ```
 
-    ## [1] 1  15 16 17 19 31
+    ## [1] 1  14 15 16 17 19 31
     ## 31 Levels: 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 ... 31
 
 Doing so reveals that the DPE for 6 participants were unreliable (i.e., a DP was found on fewer than half of the iterations). Removing those participants reveals a mean DPE of ~192 across the remaining participants (the value moves around ever so slightly each time the bootstrap re-sampling procedure runs). This tells us that on average, phonological coding was influencing behavior by as early as 192 ms after fixation on the target word began.
@@ -550,7 +550,7 @@ summarize(dpe.rel, mean.dpe = mean(median_duration, na.rm=TRUE))
 ```
 
     ##   mean.dpe
-    ## 1   191.12
+    ## 1  185.875
 
 ``` r
 DP<-mean(dpe.rel$median_duration)
@@ -559,21 +559,6 @@ ci.upper<-mean(dpe.rel$ci.upper)
 ```
 
 Finally, we can represent this visually by examining the survival curves created using the ggsurv function.
-
-``` r
-d$survdat<-as.integer(ifelse(d$Preview=="Identical",NA,d$ffd))
-tmp2 <- filter(d, !subj %in% c(1, 15, 16, 17, 19, 31))
-ffd.surv <- survfit(Surv(survdat) ~ Preview, data=tmp2)
-pl2<-ggsurv(s=ffd.surv)
-
-#my.label1 = bquote("Divergence Point " ~ .(format(DP, digits=3)) ~ "ms")
-#my.label2 = bquote("95% CI: " ~ .(format(ci.lower, digits=3)) ~ "-" ~ .(format(ci.upper, digits=3)) ~ "ms")
-  
-pl2 + geom_vline(xintercept = DP, linetype = "dotted") + 
-  annotate("rect", xmin=ci.lower, xmax=ci.upper, ymin=0, ymax=1, alpha = .2) + 
-  theme(axis.text.x = element_text(colour="grey4", size=16), axis.text.y = element_text(colour = "grey4", size=16)) + 
-  labs(y = "Survival", x = "Time") + theme_grey(base_size=16)
-```
 
 ![](PPRS_markdown_files/figure-markdown_github/survival%20figure%20Exp%201-1.png)
 
@@ -1027,9 +1012,9 @@ str(dpe)
 
     ## 'data.frame':    31 obs. of  6 variables:
     ##  $ subject        : Factor w/ 31 levels "1","2","3","4",..: 1 2 3 4 5 6 7 8 9 10 ...
-    ##  $ dpcount        : num  1000 1000 1000 9 1000 1000 1000 1000 1000 1000 ...
-    ##  $ median_dp_point: num  1 1 1 879 241 125 266 43 1 1 ...
-    ##  $ median_duration: num  134 88 124 264 146 ...
+    ##  $ dpcount        : num  1000 1000 1000 8 1000 1000 1000 1000 1000 1000 ...
+    ##  $ median_dp_point: num  1 1 1 886 241 ...
+    ##  $ median_duration: num  134 88 124 263 146 ...
     ##  $ ci.lower       : num  134 88 124 263 146 ...
     ##  $ ci.upper       : num  134 177 124 264 170 ...
 
@@ -1040,7 +1025,7 @@ dpe$subject[dpe$dpcount<500]
     ## [1] 4
     ## 31 Levels: 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 ... 31
 
-Doing so reveals that the DPE for 1 participant was unreliable (i.e., a DP was found on fewer than half of the iterations). Removing that participant reveals a mean DPE of ~151 across the remaining participants (the value moves around ever so slightly each time the bootstrap re-sampling procedure runs). This tells us that on average, the constraint manipulation was influencing behavior by as early as 151 ms after fixation on the target word began.
+Doing so reveals that the DPE for 1 participant was unreliable (i.e., a DP was found on fewer than half of the iterations). Removing that participant reveals a mean DPE of ~151 ms across the remaining participants (the value moves around ever so slightly each time the bootstrap re-sampling procedure runs). This tells us that on average, the constraint manipulation was influencing behavior by as early as 151 ms after fixation on the target word began.
 
 ``` r
 dpe.rel <- filter(dpe, dpcount >= 500)
@@ -1048,7 +1033,7 @@ summarize(dpe.rel, mean.dpe = mean(median_duration, na.rm=TRUE))
 ```
 
     ##   mean.dpe
-    ## 1 150.5583
+    ## 1  150.775
 
 ``` r
 DP<-mean(dpe.rel$median_duration)
@@ -1069,11 +1054,16 @@ pl2<-ggsurv(s=ffd.surv)
   
 pl2 + geom_vline(xintercept = DP, linetype = "dotted") + 
   annotate("rect", xmin=ci.lower, xmax=ci.upper, ymin=0, ymax=1, alpha = .2) + 
+  annotate("text", x = 475, y = 0.75, label = "Mean Divergence Point = 151ms", size = 3.5) +
+  annotate("text", x = 475, y = 0.7, label = "Range: 76-264.5ms", size = 3.5) + 
   theme(axis.text.x = element_text(colour="grey4", size=16), axis.text.y = element_text(colour = "grey4", size=16)) + 
   labs(y = "Survival", x = "Time") + theme_grey(base_size=16)
 ```
 
-![](PPRS_markdown_files/figure-markdown_github/survival%20figure%20pred-1.png) \#\# Determining hte size of the predictability effect for each participant.
+![](PPRS_markdown_files/figure-markdown_github/survival%20figure%20pred-1.png)
+
+Determining the size of the predictability effect for each participant.
+-----------------------------------------------------------------------
 
 We can compute each participant's mean gzd for the high and low constraint items and then subtract their gzd in the high constraint condition from their gzd in the low constraint condition to determine the size of each individual participant's predictability effect.
 
@@ -1116,3 +1106,745 @@ head(pred,31)
     ## 29      29 290.5000 284.5333  -5.9666667
     ## 30      30 295.7407 360.9630  65.2222222
     ## 31      31 232.4286 224.1579  -8.2706767
+
+Cluster Analysis to determine different reader profiles
+-------------------------------------------------------
+
+Examining the relationship between reading strategies (e.g., the use of phonological coding to identify words or context to predict/constrain the possibilities for upcoming words) and underlying language skill profiles using cluster analysis
+
+We used Ward's Method, which is a hierarchical, agglomerative clustering procedure, and considered 5 clustering solutions (2- to 6-cluster solutions). The input consisted of z-transformed data for the following measures for the 25 participants without missing cases.
+**Mean.GZD** - the mean gaze duration in the identical preview condition.
+**DPE.Phon** - the individual participant's divergence point (calculated from the survival analysis above).
+**Pred.effect.GZD** - the size of the predictability effect (in ms) calculated by subtracting a participant's mean gaze duration in the high constraint condition from their mean gaze duration in the low constraint condition.
+**Spelling** - participant's raw score on the Woodcock Johnson spelling assessment.
+**T.PDE.WPS** - participant's score on the TOWRE Phonemic Decoding Efficiency subtest (converted into a words per second measure).
+**T.SWE.WPS** - participant's score on the TOWRE Sight Word Efficiency subtest (converted into a words per second measure).
+**Vocab** - participant's raw score on the WASI II Vocabulary test.
+
+*We did not include scores on the PIAT.R reading comprehension test when performing the cluster analysis due to reduced variability in scores. We also chose to use the size of the predictability effect in ms rather than the DPE for our measure of reliance on predictive strategies due to greater variability in scores.*
+
+``` r
+# 'clusterdata' is a data frame with one row per subject and one column
+# per measure (as numeric, z-transformed values) that you want the cluster analysis to take into account.
+# Remove all columns that you do not want the cluster analysis to use and any rows with missing data.
+
+t <- read.csv("PPRS_Assessment_EM.csv")
+cd <- data.frame(matrix(NA, nrow=31, ncol=0))
+cd$sub <- as.factor(t$ID)
+cd$Verbal.Fluency <- as.numeric(scale(t$Verbal.Fluency))
+cd$Spelling <- as.numeric(scale(t$Spelling))
+cd$T.SWE.WPS <- as.numeric(scale(t$T.SWE.WPS))
+cd$T.PDE.WPS <- as.numeric(scale(t$T.PDE.WPS))
+cd$PIAT <- as.numeric(scale(t$PIAT))
+cd$Vocab <- as.numeric(scale(t$Vocab))
+cd$DPE.Phon <- as.numeric(scale(t$DPE.Phon))
+cd$DPE.Pred <- as.numeric(scale(t$DPE.Pred))
+cd$Pred.effect.GZD <- as.numeric(scale(t$Pred.effect.GZD))
+cd$Mean.GZD <- as.numeric(scale(t$Mean.GZD))
+
+# use subject ID as a rowname to make sure that you can correctly match each sub to its cluster
+rownames(cd)<-cd$sub
+
+# remove participants with missing values and remove variables that are not of interest
+cd[!complete.cases(cd),]
+```
+
+    ##    sub Verbal.Fluency    Spelling  T.SWE.WPS  T.PDE.WPS       PIAT
+    ## 1    1     -0.7638002 0.827354525 -0.6300131 -0.5452771  0.5252115
+    ## 4    4     -0.2449638 0.827354525  1.9306632  2.4113050  0.5252115
+    ## 15  15      0.6983751 1.100205485  0.2696840  0.3802617  0.5252115
+    ## 16  16      1.4058793 0.008801644  0.8233437  0.4830993 -0.5399371
+    ## 17  17      1.6417140 0.827354525 -0.1455608  2.1924276  0.5252115
+    ## 19  19      1.0757107 0.827354525  0.9869250  0.4830993  1.1338679
+    ## 31  31      1.8303818 0.827354525  0.8233437 -1.7793287  0.2208834
+    ##         Vocab  DPE.Phon   DPE.Pred Pred.effect.GZD    Mean.GZD
+    ## 1  -0.4584544        NA -0.4296877      -0.2618981 -0.27150441
+    ## 4   0.5105515 0.4894084         NA      -0.9844759  0.62349399
+    ## 15 -1.1044583        NA -0.8829261      -1.7745384  1.23723279
+    ## 16 -0.7814564        NA -1.9893609       0.4036505  0.02446397
+    ## 17  1.1565554        NA -0.4963404       0.2974773 -0.93981068
+    ## 19  1.8025593        NA -1.4828004       0.5092320 -1.94393622
+    ## 31  0.8335534        NA  2.0098011      -1.0777651  0.47966053
+
+``` r
+clusterdata<-cd[c(2:14,18,20:30),c(3:5,7:8,10:11)]
+sub <- c(2:14,18,20:30)
+```
+
+Doing so reveals the dendogram with the 2- and 3-cluster solutions outlined in blue and red respectively
+
+``` r
+# Ward Hierarchical Clustering
+d <- dist(clusterdata, method = "euclidean") # distance matrix
+fit <- hclust(d, method="ward.D2") # ward.D2 is actualy ward's method
+
+plot(fit) # display dendogram
+groups2 <- cutree(fit, k=2) # cut tree into 2 clusters
+groups3 <- cutree(fit, k=3) # cut tree into 3 clusters
+groups4 <- cutree(fit, k=4) # cut tree into 4 clusters
+groups5 <- cutree(fit, k=5) # cut tree into 5 clusters
+groups6 <- cutree(fit, k=6) # cut tree into 6 clusters
+# draw dendogram with borders around the k clusters 
+rect.hclust(fit, k=3, border="red")
+rect.hclust(fit, k=2, border="blue")
+```
+
+![](PPRS_markdown_files/figure-markdown_github/cluster%20analysis%20dendogram-1.png)
+
+Next, we can use the clValid package to compare the different clustering methods and determine which cluster solution is best. When doing so, the aim is to minimize connectivity, maximize silhouette (max value 1), and maximize the Dunn index (max value infinity).
+
+Doing so reveals that the hierarchical clustering method was the best (providing a better solution than kmeans or pam), but depending on the validation measure, either the 2, 3, or 4 cluster solution was best. Going forward, we investigate the 2- and 3-cluster solutions.
+
+``` r
+#######################################
+##  determing best cluster solution  ##
+#######################################
+
+library(clValid)
+
+clmethods <- c("hierarchical","kmeans","pam")
+v <- clValid(clusterdata, nClust = 2:6,
+             clMethods = clmethods, validation = "internal") #comparing methods and cluster solutions for k= 2-6 solutions
+
+# Connectivity should be minimized (minimum value 0), silhouette should be maximized (max value 1), Dunn index should be maximized (max value infinity)
+summary(v) #summary of best method (hierarchical, kmeans, pam) and number of clusters
+```
+
+    ## 
+    ## Clustering Methods:
+    ##  hierarchical kmeans pam 
+    ## 
+    ## Cluster sizes:
+    ##  2 3 4 5 6 
+    ## 
+    ## Validation Measures:
+    ##                                  2       3       4       5       6
+    ##                                                                   
+    ## hierarchical Connectivity   5.3579 12.3206 15.6996 16.1996 19.6313
+    ##              Dunn           0.4452  0.4492  0.4694  0.4694  0.4366
+    ##              Silhouette     0.2431  0.2503  0.1692  0.1428  0.0944
+    ## kmeans       Connectivity   5.3579 12.3206 25.3794 33.0591 37.6829
+    ##              Dunn           0.4452  0.4492  0.3361  0.2899  0.3347
+    ##              Silhouette     0.2431  0.2503  0.1483  0.1754  0.1577
+    ## pam          Connectivity   9.9516 19.3405 29.2313 32.7048 35.1381
+    ##              Dunn           0.3453  0.3432  0.3118  0.3470  0.3470
+    ##              Silhouette     0.2265  0.1954  0.1716  0.1731  0.1753
+    ## 
+    ## Optimal Scores:
+    ## 
+    ##              Score  Method       Clusters
+    ## Connectivity 5.3579 hierarchical 2       
+    ## Dunn         0.4694 hierarchical 4       
+    ## Silhouette   0.2503 hierarchical 3
+
+``` r
+plot(v) # plots for internal validataion measures (connectivity, Dunn, Silhouette)
+```
+
+![](PPRS_markdown_files/figure-markdown_github/cluster%20analysis%20validation-1.png)![](PPRS_markdown_files/figure-markdown_github/cluster%20analysis%20validation-2.png)![](PPRS_markdown_files/figure-markdown_github/cluster%20analysis%20validation-3.png)
+
+Here we can see the summary statistics for various reading time and language skill assessments for the different clusters in the 2- and 3-cluster solutions.
+
+``` r
+#merge assessment data with cluster data grouping variables
+groups<-data.frame(groups2,groups3,sub)
+full<-merge(cd,groups,by="sub")
+full$groups2 <- as.factor(full$groups2)
+full$groups3 <- as.factor(full$groups3)
+
+stats2<-describeBy(full, full$groups2, skew=FALSE, ranges=FALSE)
+stats2
+```
+
+    ## 
+    ##  Descriptive statistics by group 
+    ## group: 1
+    ##                 vars  n  mean   sd   se
+    ## sub*               1 21 15.95 9.27 2.02
+    ## Verbal.Fluency     2 21 -0.16 0.88 0.19
+    ## Spelling           3 21  0.15 0.71 0.15
+    ## T.SWE.WPS          4 21 -0.07 1.15 0.25
+    ## T.PDE.WPS          5 21  0.18 0.80 0.17
+    ## PIAT               6 21 -0.07 1.12 0.25
+    ## Vocab              7 21  0.05 1.01 0.22
+    ## DPE.Phon           8 21 -0.21 0.75 0.16
+    ## DPE.Pred           9 20  0.21 0.90 0.20
+    ## Pred.effect.GZD   10 21 -0.19 0.89 0.19
+    ## Mean.GZD          11 21 -0.01 1.02 0.22
+    ## groups2*          12 21  1.00 0.00 0.00
+    ## groups3*          13 21  1.29 0.46 0.10
+    ## -------------------------------------------------------- 
+    ## group: 2
+    ##                 vars n  mean   sd   se
+    ## sub*               1 4 15.50 9.98 4.99
+    ## Verbal.Fluency     2 4 -0.63 0.83 0.42
+    ## Spelling           3 4 -1.90 0.59 0.29
+    ## T.SWE.WPS          4 4 -0.16 0.41 0.20
+    ## T.PDE.WPS          5 4 -1.27 0.67 0.33
+    ## PIAT               6 4 -0.24 0.81 0.40
+    ## Vocab              7 4 -0.62 0.42 0.21
+    ## DPE.Phon           8 4  1.08 1.56 0.78
+    ## DPE.Pred           9 4 -0.22 0.59 0.30
+    ## Pred.effect.GZD   10 4  1.46 0.14 0.07
+    ## Mean.GZD          11 4  0.40 0.84 0.42
+    ## groups2*          12 4  2.00 0.00 0.00
+    ## groups3*          13 4  3.00 0.00 0.00
+
+``` r
+stats3<-describeBy(full, full$groups3, skew=FALSE, ranges=FALSE)
+stats3
+```
+
+    ## 
+    ##  Descriptive statistics by group 
+    ## group: 1
+    ##                 vars  n  mean   sd   se
+    ## sub*               1 15 17.47 9.03 2.33
+    ## Verbal.Fluency     2 15 -0.19 0.90 0.23
+    ## Spelling           3 15  0.30 0.68 0.18
+    ## T.SWE.WPS          4 15  0.28 0.81 0.21
+    ## T.PDE.WPS          5 15  0.21 0.85 0.22
+    ## PIAT               6 15  0.38 0.65 0.17
+    ## Vocab              7 15  0.55 0.56 0.14
+    ## DPE.Phon           8 15  0.03 0.74 0.19
+    ## DPE.Pred           9 14  0.14 0.89 0.24
+    ## Pred.effect.GZD   10 15 -0.05 0.88 0.23
+    ## Mean.GZD          11 15  0.18 1.13 0.29
+    ## groups2*          12 15  1.00 0.00 0.00
+    ## groups3*          13 15  1.00 0.00 0.00
+    ## -------------------------------------------------------- 
+    ## group: 2
+    ##                 vars n  mean   sd   se
+    ## sub*               1 6 12.17 9.56 3.90
+    ## Verbal.Fluency     2 6 -0.09 0.90 0.37
+    ## Spelling           3 6 -0.22 0.70 0.29
+    ## T.SWE.WPS          4 6 -0.95 1.47 0.60
+    ## T.PDE.WPS          5 6  0.12 0.71 0.29
+    ## PIAT               6 6 -1.20 1.31 0.54
+    ## Vocab              7 6 -1.21 0.76 0.31
+    ## DPE.Phon           8 6 -0.78 0.38 0.15
+    ## DPE.Pred           9 6  0.37 0.99 0.40
+    ## Pred.effect.GZD   10 6 -0.53 0.89 0.36
+    ## Mean.GZD          11 6 -0.47 0.49 0.20
+    ## groups2*          12 6  1.00 0.00 0.00
+    ## groups3*          13 6  2.00 0.00 0.00
+    ## -------------------------------------------------------- 
+    ## group: 3
+    ##                 vars n  mean   sd   se
+    ## sub*               1 4 15.50 9.98 4.99
+    ## Verbal.Fluency     2 4 -0.63 0.83 0.42
+    ## Spelling           3 4 -1.90 0.59 0.29
+    ## T.SWE.WPS          4 4 -0.16 0.41 0.20
+    ## T.PDE.WPS          5 4 -1.27 0.67 0.33
+    ## PIAT               6 4 -0.24 0.81 0.40
+    ## Vocab              7 4 -0.62 0.42 0.21
+    ## DPE.Phon           8 4  1.08 1.56 0.78
+    ## DPE.Pred           9 4 -0.22 0.59 0.30
+    ## Pred.effect.GZD   10 4  1.46 0.14 0.07
+    ## Mean.GZD          11 4  0.40 0.84 0.42
+    ## groups2*          12 4  2.00 0.00 0.00
+    ## groups3*          13 4  3.00 0.00 0.00
+
+Next we can take a look at the associated figures and group comparisons, to see what type of reader profiles the cluster analysis revealed. First, we consider the 2-cluster solution.
+
+When breaking our participants into 2 clusters, the analysis reveals a generally higher-skilled (cluster 1) and generally-lower skilled (cluster 2) group of readers. Cluster 1 scored significantly higher on spelling and rapid non-word naming, and numerically higher on vocabulary and reading comprehension (differences between rapid word naming and mean gaze durations were very small). Cluster 1 also had a significantly earlier mean divergence point (they use sound information more rapidly during reading), but had a significantly smaller predictability effect (they seem to be less reliant on context to identify words). The first evidence that we might have identified a dissociation between phonological and predictive reading strategies (and evidence that relying on phonological processing might be indicative of generally more highly skilled readers).
+
+![](PPRS_markdown_files/figure-markdown_github/2%20cluster%20solution-1.png)
+
+    ## 
+    ## Call:
+    ## lm(formula = Spelling ~ groups2, data = full)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -1.2343 -0.4158 -0.1429  0.5457  1.2213 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)   0.1517     0.1517   1.000    0.328    
+    ## groups22     -2.0529     0.3792  -5.414 1.68e-05 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.695 on 23 degrees of freedom
+    ## Multiple R-squared:  0.5603, Adjusted R-squared:  0.5412 
+    ## F-statistic: 29.31 on 1 and 23 DF,  p-value: 1.68e-05
+
+![](PPRS_markdown_files/figure-markdown_github/2%20cluster%20solution-2.png)
+
+    ## 
+    ## Call:
+    ## lm(formula = Vocab ~ groups2, data = full)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -2.1226 -0.1846  0.1384  0.4845  1.7534 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)
+    ## (Intercept)  0.04912    0.20896   0.235    0.816
+    ## groups22    -0.66908    0.52240  -1.281    0.213
+    ## 
+    ## Residual standard error: 0.9576 on 23 degrees of freedom
+    ## Multiple R-squared:  0.06657,    Adjusted R-squared:  0.02599 
+    ## F-statistic:  1.64 on 1 and 23 DF,  p-value: 0.213
+
+![](PPRS_markdown_files/figure-markdown_github/2%20cluster%20solution-3.png)
+
+    ## 
+    ## Call:
+    ## lm(formula = PIAT ~ groups2, data = full)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -3.2099 -0.4710  0.2898  0.7463  1.2028 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)
+    ## (Intercept) -0.06895    0.23741  -0.290    0.774
+    ## groups22    -0.16666    0.59354  -0.281    0.781
+    ## 
+    ## Residual standard error: 1.088 on 23 degrees of freedom
+    ## Multiple R-squared:  0.003416,   Adjusted R-squared:  -0.03991 
+    ## F-statistic: 0.07884 on 1 and 23 DF,  p-value: 0.7814
+
+![](PPRS_markdown_files/figure-markdown_github/2%20cluster%20solution-4.png)
+
+    ## 
+    ## Call:
+    ## lm(formula = T.PDE.WPS ~ groups2, data = full)
+    ## 
+    ## Residuals:
+    ##      Min       1Q   Median       3Q      Max 
+    ## -1.44830 -0.41992  0.09427  0.40278  2.22815 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)   
+    ## (Intercept)   0.1832     0.1703   1.075  0.29337   
+    ## groups22     -1.4483     0.4258  -3.401  0.00245 **
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.7805 on 23 degrees of freedom
+    ## Multiple R-squared:  0.3347, Adjusted R-squared:  0.3057 
+    ## F-statistic: 11.57 on 1 and 23 DF,  p-value: 0.002451
+
+![](PPRS_markdown_files/figure-markdown_github/2%20cluster%20solution-5.png)
+
+    ## 
+    ## Call:
+    ## lm(formula = T.SWE.WPS ~ groups2, data = full)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -3.1896 -0.2829  0.1557  0.6168  2.0010 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)
+    ## (Intercept) -0.07030    0.23630  -0.297    0.769
+    ## groups22    -0.09256    0.59075  -0.157    0.877
+    ## 
+    ## Residual standard error: 1.083 on 23 degrees of freedom
+    ## Multiple R-squared:  0.001066,   Adjusted R-squared:  -0.04237 
+    ## F-statistic: 0.02455 on 1 and 23 DF,  p-value: 0.8769
+
+![](PPRS_markdown_files/figure-markdown_github/2%20cluster%20solution-6.png)
+
+    ## 
+    ## Call:
+    ## lm(formula = Mean.GZD ~ groups2, data = full)
+    ## 
+    ## Residuals:
+    ##      Min       1Q   Median       3Q      Max 
+    ## -1.81690 -0.60330 -0.01957  0.63200  2.32946 
+    ## 
+    ## Coefficients:
+    ##              Estimate Std. Error t value Pr(>|t|)
+    ## (Intercept) -0.008506   0.217587  -0.039    0.969
+    ## groups22     0.406638   0.543967   0.748    0.462
+    ## 
+    ## Residual standard error: 0.9971 on 23 degrees of freedom
+    ## Multiple R-squared:  0.02372,    Adjusted R-squared:  -0.01873 
+    ## F-statistic: 0.5588 on 1 and 23 DF,  p-value: 0.4623
+
+![](PPRS_markdown_files/figure-markdown_github/2%20cluster%20solution-7.png)
+
+    ## 
+    ## Call:
+    ## lm(formula = DPE.Phon ~ groups2, data = full)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -2.1498 -0.4233 -0.1202  0.4993  1.9201 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)  
+    ## (Intercept)  -0.2051     0.1956  -1.049   0.3052  
+    ## groups22      1.2821     0.4890   2.622   0.0152 *
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.8963 on 23 degrees of freedom
+    ## Multiple R-squared:  0.2301, Adjusted R-squared:  0.1966 
+    ## F-statistic: 6.875 on 1 and 23 DF,  p-value: 0.01524
+
+![](PPRS_markdown_files/figure-markdown_github/2%20cluster%20solution-8.png)
+
+    ## 
+    ## Call:
+    ## lm(formula = Pred.effect.GZD ~ groups2, data = full)
+    ## 
+    ## Residuals:
+    ##      Min       1Q   Median       3Q      Max 
+    ## -1.95687 -0.61147  0.02849  0.39898  1.68238 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)   
+    ## (Intercept)  -0.1871     0.1813  -1.032   0.3127   
+    ## groups22      1.6454     0.4531   3.631   0.0014 **
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.8306 on 23 degrees of freedom
+    ## Multiple R-squared:  0.3644, Adjusted R-squared:  0.3367 
+    ## F-statistic: 13.18 on 1 and 23 DF,  p-value: 0.001399
+
+Finally, we consider the 3-cluster solution.
+
+When breaking our participants into 3 clusters, the analysis provides additional evidence in support of various reading strategies, particularly it identifies one group of readers (cluster 3) who show a large effect of predictability and a very late effect of phonology (i.e., they seem to rely heavily on prior context to identify words) and another group of readers (cluster 2) who shows the opposite pattern--early use of phonology (i.e., early divergence point estimates) but a very small effect of predictability. The third cluster (cluster 1) falls in the middle and seems to be using a mixture of these two strategies (or at least contains a mixture of participants who use each strategy).
+
+Compared to Cluster 2 (our readers who seem to rely more on phonological coding), Cluster 3 (our predictive strategy readers) had significantly later divergence point estimates and significantly larger effects of predictability. They also showed some interesting differences in underlying language skills: Although they did not differ from Cluster 2 on measures of vocabulary or reading comprehension, they had significantly lower scores on spelling and rapid non-word naming (though their scores on rapid word naming did not differ--suggesting that the difference is driven by poorer skills extracting phonology from written information, rather than slower processing speed). Finally, there was a tendency for readers relying on predictive strategies to have marginally slower mean gaze durations during reading, suggesting slightly slower word identification speeds.
+
+![](PPRS_markdown_files/figure-markdown_github/3%20cluster%20solution-1.png)
+
+    ## 
+    ## Call:
+    ## lm(formula = DPE.Phon ~ groups3, data = full)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -2.1498 -0.4197 -0.1351  0.3681  1.6897 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)  
+    ## (Intercept)  0.02523    0.21806   0.116   0.9089  
+    ## groups32    -0.80625    0.40795  -1.976   0.0608 .
+    ## groups33     1.05170    0.47525   2.213   0.0376 *
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.8445 on 22 degrees of freedom
+    ## Multiple R-squared:  0.3462, Adjusted R-squared:  0.2868 
+    ## F-statistic: 5.825 on 2 and 22 DF,  p-value: 0.009331
+
+    ## 
+    ## Call:
+    ## lm(formula = DPE.Phon ~ groups3, data = subset(full, full$groups3 != 
+    ##     1))
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -2.1498 -0.3051  0.1291  0.3546  1.5067 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)  
+    ## (Intercept)  -0.7810     0.4076  -1.916   0.0917 .
+    ## groups33      1.8580     0.6445   2.883   0.0204 *
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.9984 on 8 degrees of freedom
+    ## Multiple R-squared:  0.5095, Adjusted R-squared:  0.4482 
+    ## F-statistic: 8.312 on 1 and 8 DF,  p-value: 0.02042
+
+![](PPRS_markdown_files/figure-markdown_github/3%20cluster%20solution-2.png)
+
+    ## 
+    ## Call:
+    ## lm(formula = Pred.effect.GZD ~ groups3, data = full)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -1.6141 -0.6716  0.1050  0.5634  1.5453 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)   
+    ## (Intercept) -0.05001    0.21236  -0.236   0.8160   
+    ## groups32    -0.47984    0.39729  -1.208   0.2400   
+    ## groups33     1.50829    0.46283   3.259   0.0036 **
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.8225 on 22 degrees of freedom
+    ## Multiple R-squared:  0.4039, Adjusted R-squared:  0.3497 
+    ## F-statistic: 7.453 on 2 and 22 DF,  p-value: 0.003377
+
+    ## 
+    ## Call:
+    ## lm(formula = Pred.effect.GZD ~ groups3, data = subset(full, full$groups3 != 
+    ##     1))
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -1.6141 -0.1200  0.1185  0.4488  0.7168 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)   
+    ## (Intercept)  -0.5298     0.2878  -1.841  0.10293   
+    ## groups33      1.9881     0.4551   4.368  0.00239 **
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.7051 on 8 degrees of freedom
+    ## Multiple R-squared:  0.7046, Adjusted R-squared:  0.6677 
+    ## F-statistic: 19.08 on 1 and 8 DF,  p-value: 0.002386
+
+![](PPRS_markdown_files/figure-markdown_github/3%20cluster%20solution-3.png)
+
+    ## 
+    ## Call:
+    ## lm(formula = Vocab ~ groups3, data = full)
+    ## 
+    ## Residuals:
+    ##      Min       1Q   Median       3Q      Max 
+    ## -0.86134 -0.36607 -0.04307  0.27994  1.24894 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)   0.5536     0.1530   3.618  0.00152 ** 
+    ## groups32     -1.7657     0.2863  -6.168  3.3e-06 ***
+    ## groups33     -1.1736     0.3335  -3.519  0.00193 ** 
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.5927 on 22 degrees of freedom
+    ## Multiple R-squared:  0.658,  Adjusted R-squared:  0.6269 
+    ## F-statistic: 21.16 on 2 and 22 DF,  p-value: 7.49e-06
+
+    ## 
+    ## Call:
+    ## lm(formula = Vocab ~ groups3, data = subset(full, full$groups3 != 
+    ##     1))
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -0.8613 -0.4037  0.1077  0.3634  1.0767 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)   
+    ## (Intercept)  -1.2121     0.2651  -4.572  0.00182 **
+    ## groups33      0.5922     0.4192   1.413  0.19543   
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.6494 on 8 degrees of freedom
+    ## Multiple R-squared:  0.1997, Adjusted R-squared:  0.09963 
+    ## F-statistic: 1.996 on 1 and 8 DF,  p-value: 0.1954
+
+![](PPRS_markdown_files/figure-markdown_github/3%20cluster%20solution-4.png)
+
+    ## 
+    ## Call:
+    ## lm(formula = PIAT ~ groups3, data = full)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -2.0796 -0.4565  0.1420  0.5985  1.4202 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)   
+    ## (Intercept)   0.3832     0.2236   1.714  0.10056   
+    ## groups32     -1.5825     0.4182  -3.784  0.00102 **
+    ## groups33     -0.6188     0.4872  -1.270  0.21733   
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.8658 on 22 degrees of freedom
+    ## Multiple R-squared:  0.3963, Adjusted R-squared:  0.3414 
+    ## F-statistic: 7.221 on 2 and 22 DF,  p-value: 0.003882
+
+    ## 
+    ## Call:
+    ## lm(formula = PIAT ~ groups3, data = subset(full, full$groups3 != 
+    ##     1))
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -2.0796 -0.6847  0.1775  0.8496  1.4202 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)  
+    ## (Intercept)  -1.1993     0.4687  -2.559   0.0337 *
+    ## groups33      0.9637     0.7410   1.301   0.2296  
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 1.148 on 8 degrees of freedom
+    ## Multiple R-squared:  0.1745, Adjusted R-squared:  0.07134 
+    ## F-statistic: 1.691 on 1 and 8 DF,  p-value: 0.2296
+
+![](PPRS_markdown_files/figure-markdown_github/3%20cluster%20solution-5.png)
+
+    ## 
+    ## Call:
+    ## lm(formula = Spelling ~ groups3, data = full)
+    ## 
+    ## Residuals:
+    ##      Min       1Q   Median       3Q      Max 
+    ## -1.38244 -0.56389 -0.01819  0.52751  1.07321 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)   0.2998     0.1737   1.726   0.0984 .  
+    ## groups32     -0.5184     0.3250  -1.595   0.1249    
+    ## groups33     -2.2010     0.3786  -5.813 7.54e-06 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.6728 on 22 degrees of freedom
+    ## Multiple R-squared:  0.6059, Adjusted R-squared:  0.5701 
+    ## F-statistic: 16.91 on 2 and 22 DF,  p-value: 3.56e-05
+
+    ## 
+    ## Call:
+    ## lm(formula = Spelling ~ groups3, data = subset(full, full$groups3 != 
+    ##     1))
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -0.8640 -0.5230  0.1137  0.4775  0.7731 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)   
+    ## (Intercept)  -0.2186     0.2695  -0.811  0.44083   
+    ## groups33     -1.6826     0.4261  -3.948  0.00425 **
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.6602 on 8 degrees of freedom
+    ## Multiple R-squared:  0.6609, Adjusted R-squared:  0.6185 
+    ## F-statistic: 15.59 on 1 and 8 DF,  p-value: 0.004245
+
+![](PPRS_markdown_files/figure-markdown_github/3%20cluster%20solution-6.png)
+
+    ## 
+    ## Call:
+    ## lm(formula = T.PDE.WPS ~ groups3, data = full)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -1.3883 -0.4439  0.1543  0.3788  2.2041 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)   
+    ## (Intercept)  0.20715    0.20584   1.006  0.32517   
+    ## groups32    -0.08398    0.38508  -0.218  0.82937   
+    ## groups33    -1.47229    0.44861  -3.282  0.00341 **
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.7972 on 22 degrees of freedom
+    ## Multiple R-squared:  0.3361, Adjusted R-squared:  0.2757 
+    ## F-statistic: 5.569 on 2 and 22 DF,  p-value: 0.01104
+
+    ## 
+    ## Call:
+    ## lm(formula = T.PDE.WPS ~ groups3, data = subset(full, full$groups3 != 
+    ##     1))
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -1.3883 -0.3214  0.2057  0.5013  0.6170 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)  
+    ## (Intercept)   0.1232     0.2846   0.433    0.677  
+    ## groups33     -1.3883     0.4499  -3.086    0.015 *
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.697 on 8 degrees of freedom
+    ## Multiple R-squared:  0.5434, Adjusted R-squared:  0.4863 
+    ## F-statistic: 9.522 on 1 and 8 DF,  p-value: 0.01499
+
+![](PPRS_markdown_files/figure-markdown_github/3%20cluster%20solution-7.png)
+
+    ## 
+    ## Call:
+    ## lm(formula = T.SWE.WPS ~ groups3, data = full)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -2.3069 -0.4283  0.1557  0.5406  1.6479 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)  
+    ## (Intercept)   0.2828     0.2488   1.137   0.2679  
+    ## groups32     -1.2358     0.4654  -2.655   0.0145 *
+    ## groups33     -0.4456     0.5422  -0.822   0.4200  
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.9635 on 22 degrees of freedom
+    ## Multiple R-squared:  0.2435, Adjusted R-squared:  0.1747 
+    ## F-statistic:  3.54 on 2 and 22 DF,  p-value: 0.04646
+
+    ## 
+    ## Call:
+    ## lm(formula = T.SWE.WPS ~ groups3, data = subset(full, full$groups3 != 
+    ##     1))
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -2.3069 -0.4152  0.2047  0.5580  1.5687 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)  
+    ## (Intercept)  -0.9530     0.4857  -1.962   0.0854 .
+    ## groups33      0.7901     0.7680   1.029   0.3336  
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 1.19 on 8 degrees of freedom
+    ## Multiple R-squared:  0.1169, Adjusted R-squared:  0.006465 
+    ## F-statistic: 1.059 on 1 and 8 DF,  p-value: 0.3336
+
+![](PPRS_markdown_files/figure-markdown_github/3%20cluster%20solution-8.png)
+
+    ## 
+    ## Call:
+    ## lm(formula = Mean.GZD ~ groups3, data = full)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -2.0013 -0.7430  0.1620  0.4476  2.1451 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)
+    ## (Intercept)   0.1759     0.2528   0.696    0.494
+    ## groups32     -0.6453     0.4729  -1.365    0.186
+    ## groups33      0.2223     0.5509   0.403    0.690
+    ## 
+    ## Residual standard error: 0.9789 on 22 degrees of freedom
+    ## Multiple R-squared:  0.09991,    Adjusted R-squared:  0.01808 
+    ## F-statistic: 1.221 on 2 and 22 DF,  p-value: 0.3142
+
+    ## 
+    ## Call:
+    ## lm(formula = Mean.GZD ~ groups3, data = subset(full, full$groups3 != 
+    ##     1))
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -1.1294 -0.0881  0.1629  0.2576  0.8908 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)  
+    ## (Intercept)  -0.4694     0.2621  -1.791   0.1111  
+    ## groups33      0.8676     0.4145   2.093   0.0697 .
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.6421 on 8 degrees of freedom
+    ## Multiple R-squared:  0.3539, Adjusted R-squared:  0.2731 
+    ## F-statistic: 4.381 on 1 and 8 DF,  p-value: 0.06968
