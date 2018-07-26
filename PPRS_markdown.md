@@ -129,7 +129,13 @@ p.meanse.SCA + scale_colour_manual(values=c("aquamarine4","aquamarine3","coral3"
 Running linear mixed effect regression models to determine significant mean differences
 ---------------------------------------------------------------------------------------
 
-For each model, the phonologically related condition is represented by the intercept and treatment coded contrasts test for significant differences between the phonologically
+For each model, the phonologically related condition is represented by the intercept and treatment coded contrasts test for significant differences between the phonologically related condition and the identical condition ("previewtype2") and the phonologically related and the control condition ("previewtype3"). Maximal models (with subjects and items as crossed random effects) were fit and simplified when necessary to avoid convergence issues (either by removing correlation parameters between random effects for that measure or random slopes if convergence issues persisted). Absolute t-values greater than 1.96 represent significant results at the alpha .05 level.
+
+In the fixation duration measures, the results reveal that the identical preview led to significantly shorter fixations than the phonologically related preview across all duration measures, and the phonologically related preview led to significantly faster reading times than the control preview in the later measures of go-past time and total time.
+
+In the fixation probability measures, the results reveal that readers were significantly more likely to skip the target following an identical preview than following the phonologically related preview (which did not differ from the control preview). However, if readers did not skip the target, they were significantly more likely to make a first pass regression out following the control preview than the phonologically related preview (which did not differ from the identical preview).
+
+So across the eye movement record we see evidence for graded processing whereby reading is fastest following an identical preview, slowest following a control preview, and falls somewhere in between when the target was preceded by a phonologically related preview.
 
 ``` r
 # first fixation duration
@@ -529,17 +535,17 @@ str(dpe)
 
     ## 'data.frame':    31 obs. of  6 variables:
     ##  $ subject        : Factor w/ 31 levels "1","2","3","4",..: 1 2 3 4 5 6 7 8 9 10 ...
-    ##  $ dpcount        : num  26 1000 1000 1000 1000 589 1000 846 1000 978 ...
-    ##  $ median_dp_point: num  1096 91 1 491 104 ...
+    ##  $ dpcount        : num  22 1000 1000 1000 1000 607 1000 839 1000 976 ...
+    ##  $ median_dp_point: num  1095 91 1 491 105 ...
     ##  $ median_duration: num  312.5 145.5 95.5 228.5 145.5 ...
-    ##  $ ci.lower       : num  298.1 145.5 95.5 228.5 113.5 ...
-    ##  $ ci.upper       : num  312.5 150 95.5 250.5 283 ...
+    ##  $ ci.lower       : num  300.5 145.5 95.5 228.5 113.5 ...
+    ##  $ ci.upper       : num  314 150 95.5 229.5 283 ...
 
 ``` r
 dpe$subject[dpe$dpcount<500]
 ```
 
-    ## [1] 1  14 15 16 17 19 31
+    ## [1] 1  15 16 17 19 31
     ## 31 Levels: 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 ... 31
 
 Doing so reveals that the DPE for 6 participants were unreliable (i.e., a DP was found on fewer than half of the iterations). Removing those participants reveals a mean DPE of ~192 across the remaining participants (the value moves around ever so slightly each time the bootstrap re-sampling procedure runs). This tells us that on average, phonological coding was influencing behavior by as early as 192 ms after fixation on the target word began.
@@ -550,7 +556,7 @@ summarize(dpe.rel, mean.dpe = mean(median_duration, na.rm=TRUE))
 ```
 
     ##   mean.dpe
-    ## 1  185.875
+    ## 1   191.12
 
 ``` r
 DP<-mean(dpe.rel$median_duration)
@@ -1012,8 +1018,8 @@ str(dpe)
 
     ## 'data.frame':    31 obs. of  6 variables:
     ##  $ subject        : Factor w/ 31 levels "1","2","3","4",..: 1 2 3 4 5 6 7 8 9 10 ...
-    ##  $ dpcount        : num  1000 1000 1000 8 1000 1000 1000 1000 1000 1000 ...
-    ##  $ median_dp_point: num  1 1 1 886 241 ...
+    ##  $ dpcount        : num  1000 1000 1000 10 1000 1000 1000 1000 1000 1000 ...
+    ##  $ median_dp_point: num  1 1 1 884 242 125 266 43 1 1 ...
     ##  $ median_duration: num  134 88 124 263 146 ...
     ##  $ ci.lower       : num  134 88 124 263 146 ...
     ##  $ ci.upper       : num  134 177 124 264 170 ...
@@ -1033,7 +1039,7 @@ summarize(dpe.rel, mean.dpe = mean(median_duration, na.rm=TRUE))
 ```
 
     ##   mean.dpe
-    ## 1  150.775
+    ## 1 150.0667
 
 ``` r
 DP<-mean(dpe.rel$median_duration)

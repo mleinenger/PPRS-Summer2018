@@ -80,7 +80,13 @@ p.meanse.SCA + scale_colour_manual(values=c("aquamarine4","aquamarine3","coral3"
 ```
 
 ## Running linear mixed effect regression models to determine significant mean differences
-For each model, the phonologically related condition is represented by the intercept and treatment coded contrasts test for significant differences between the phonologically
+For each model, the phonologically related condition is represented by the intercept and treatment coded contrasts test for significant differences between the phonologically related condition and the identical condition ("previewtype2") and the phonologically related and the control condition ("previewtype3"). Maximal models (with subjects and items as crossed random effects) were fit and simplified when necessary to avoid convergence issues (either by removing correlation parameters between random effects for that measure or random slopes if convergence issues persisted). Absolute t-values greater than 1.96 represent significant results at the alpha .05 level.
+
+In the fixation duration measures, the results reveal that the identical preview led to significantly shorter fixations than the phonologically related preview across all duration measures, and the phonologically related preview led to significantly faster reading times than the control preview in the later measures of go-past time and total time. 
+
+In the fixation probability measures, the results reveal that readers were significantly more likely to skip the target following an identical preview than following the phonologically related preview (which did not differ from the control preview). However, if readers did not skip the target, they were significantly more likely to make a first pass regression out following the control preview than the phonologically related preview (which did not differ from the identical preview).
+
+So across the eye movement record we see evidence for graded processing whereby reading is fastest following an identical preview, slowest following a control preview, and falls somewhere in between when the target was preceded by a phonologically related preview.
 
 ```{r models for phonological data, echo = TRUE, message = FALSE, warning = FALSE}
 # first fixation duration
